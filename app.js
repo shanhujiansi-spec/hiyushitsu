@@ -3973,18 +3973,22 @@ const scenes = [
 const concreteWords = [
   "雨", "霧", "波", "石", "風", "泥", "雪", "歯車", "針", "時計", "喉", "胸", "指",
   "椅子", "窓", "靴", "鍵", "ガラス", "紙", "廊下", "駅", "部屋", "階段", "橋",
-  "ドア", "灯り", "ベンチ", "店", "机", "声", "足元", "道", "影"
+  "ドア", "灯り", "ベンチ", "店", "机", "声", "足元", "道", "影", "味噌汁", "膜",
+  "スープ", "ドアノブ", "手すり", "車内", "座席", "歩道", "信号", "改札", "箱",
+  "通知", "画面", "夜道", "店内", "湯気", "息", "肩", "背中", "足音", "窓ガラス"
 ];
 const sensoryWords = [
   "冷たい", "重い", "ざらつく", "にじむ", "かすむ", "張りつめる", "湿る", "響く",
-  "明るい", "暗い", "温かい", "痛い", "狭い", "静か", "硬い", "やわらかい"
+  "明るい", "暗い", "温かい", "痛い", "狭い", "静か", "硬い", "やわらかい",
+  "ぬるい", "熱い", "張りつく", "浮かぶ", "沈む", "くすぶる", "ひりつく", "ぴんと",
+  "しんと", "じわじわ", "ふいに", "遅れて", "あとから", "広がる", "残る", "追いつく"
 ];
 const abstractWords = ["気持ち", "感情", "状態", "存在", "本質", "意識", "心"];
 const clichePhrases = [
   "心が晴れる", "胸が痛む", "氷のように冷たい", "炎のような情熱", "波のような不安",
   "闇に包まれる", "光が差す"
 ];
-const explanationWords = ["つまり", "要するに", "これは", "ということ", "である", "状態", "意味", "示している"];
+const explanationWords = ["つまり", "要するに", "これは", "ということ", "である", "状態", "意味", "示している", "気持ち", "感情", "〜と言える"];
 
 const state = {
   currentTheme: null,
@@ -4017,6 +4021,30 @@ function countMatches(text, words) {
 
 function flattenRelatedWords(obj) {
   return Object.values(obj).flat();
+}
+
+function getMetaphorMarkers(text) {
+  const markers = ["ようだ", "みたいだ", "のような", "まるで", "に似ている", "感じだ", "だった", "に見えた"];
+  return countMatches(text, markers);
+}
+
+function countKeywordStems(text, words) {
+  let score = 0;
+  for (const word of words) {
+    if (text.includes(word)) {
+      score += 1;
+      continue;
+    }
+    if (word.length >= 2) {
+      const stem = word.slice(0, Math.max(2, word.length - 1));
+      if (text.includes(stem)) score += 0.5;
+    }
+  }
+  return score;
+}
+
+function containsAny(text, words) {
+  return words.some(w => text.includes(w));
 }
 
 function showScreen(screenId) {
@@ -4149,24 +4177,21 @@ function scoreClarity(text) {
   let score = 0;
   const length = text.length;
 
-  if (length >= 12 && length <= 60) score += 4;
-  else if ((length >= 8 && length <= 11) || (length >= 61 && length <= 90)) score += 3;
-  else if ((length >= 5 && length <= 7) || (length >= 91 && length <= 120)) score += 2;
-  else if (length > 0) score += 1;
+  if (length >= 18 && length <= 90) score += 4;
+  else if ((length >= 10 && length <= 17) || (length >= 91 && length <= 130)) score += 3;
+  else if (length > 0) score += 2;
 
-  if (/(ようだ|みたいだ|に似ている|まるで|のような|感じだ)$/.test(text) || /(ようだ|みたいだ|に似ている|まるで|のような|感じだ)/.test(text)) {
-    score += 4;
-  } else {
-    score += 2;
-  }
+  const markerCount = getMetaphorMarkers(text);
+  score += markerCount >= 1 ? 4 : 2;
 
-  score += text.length > 0 ? 4 : 0;
+  const concreteHits = countMatches(text, concreteWords);
+  const abstractCount = countMatches(text, abstractWords);
+  score += concreteHits >= 1 ? 4 : 2;
 
   const conjunctions = countMatches(text, ["そして", "しかし", "だから", "つまり"]);
   score += conjunctions <= 1 ? 4 : 2;
 
-  const abstractCount = countMatches(text, abstractWords);
-  score += abstractCount === 0 ? 4 : abstractCount <= 2 ? 2 : 1;
+  score += abstractCount === 0 ? 4 : abstractCount <= 2 ? 3 : 2;
 
   return { score: Math.min(score, 20) };
 }
@@ -4175,15 +4200,25 @@ function scoreStructure(text, theme, scene) {
   const themeWords = flattenRelatedWords(theme.relatedWords);
   const sceneWords = flattenRelatedWords(scene.relatedWords);
 
-  const themeHits = countMatches(text, themeWords);
-  const sceneHits = countMatches(text, sceneWords);
+  const themeHits = countKeywordStems(text, themeWords);
+  const sceneHits = countKeywordStems(text, sceneWords);
 
-  const themeMatch = themeHits >= 4 ? 8 : themeHits >= 3 ? 6 : themeHits >= 2 ? 4 : themeHits >= 1 ? 2 : 0;
-  const sceneMatch = sceneHits >= 4 ? 6 : sceneHits >= 3 ? 5 : sceneHits >= 2 ? 3 : sceneHits >= 1 ? 1 : 0;
+  const delayedWords = ["あとから", "遅れて", "ふいに", "じわじわ", "急に", "残る", "追いつく", "広がる"];
+  const innerWords = ["胸", "喉", "背中", "体", "内側", "奥", "息", "肩"];
 
-  const metaphorForm = /(ようだ|みたいだ|に似ている|まるで|のような|感じだ)/.test(text);
+  let themeMatch = themeHits >= 4 ? 8 : themeHits >= 2.5 ? 6 : themeHits >= 1.5 ? 4 : themeHits >= 0.5 ? 2 : 0;
+  let sceneMatch = sceneHits >= 4 ? 6 : sceneHits >= 2.5 ? 5 : sceneHits >= 1.5 ? 3 : sceneHits >= 0.5 ? 1 : 0;
+
+  // bonus for capturing time-lag / inner spread structures common in emotion metaphors
+  if (containsAny(text, delayedWords)) themeMatch = Math.min(8, themeMatch + 1);
+  if (containsAny(text, innerWords)) sceneMatch = Math.min(6, sceneMatch + 1);
+
+  const markerCount = getMetaphorMarkers(text);
   const conjunctions = countMatches(text, ["そして", "しかし", "だから", "つまり"]);
-  const integration = metaphorForm && conjunctions <= 1 ? 6 : metaphorForm ? 4 : 2;
+  const integration =
+    markerCount >= 1 && conjunctions <= 1 && countMatches(text, concreteWords) >= 1 ? 6 :
+    markerCount >= 1 && conjunctions <= 1 ? 5 :
+    markerCount >= 1 ? 4 : 2;
 
   return { score: Math.min(themeMatch + sceneMatch + integration, 20) };
 }
@@ -4191,10 +4226,13 @@ function scoreStructure(text, theme, scene) {
 function scoreConcreteness(text) {
   const concreteHits = countMatches(text, concreteWords);
   const sensoryHits = countMatches(text, sensoryWords);
+  const bodyWords = ["胸", "喉", "背中", "肩", "息", "手", "足", "体", "奥"];
+  const bodyHits = countMatches(text, bodyWords);
 
-  const concrete = concreteHits >= 2 ? 8 : concreteHits === 1 ? 5 : 1;
-  const sensory = sensoryHits >= 2 ? 6 : sensoryHits === 1 ? 3 : 1;
-  const scene = (concreteHits + sensoryHits) >= 3 ? 6 : (concreteHits + sensoryHits) >= 2 ? 4 : 1;
+  const concrete = concreteHits >= 3 ? 8 : concreteHits >= 2 ? 7 : concreteHits === 1 ? 5 : 2;
+  const sensory = sensoryHits >= 3 ? 6 : sensoryHits >= 2 ? 5 : sensoryHits === 1 ? 3 : 1;
+  const scene = (concreteHits + sensoryHits + bodyHits) >= 4 ? 6 :
+                (concreteHits + sensoryHits + bodyHits) >= 2 ? 4 : 1;
 
   return { score: Math.min(concrete + sensory + scene, 20) };
 }
@@ -4203,12 +4241,15 @@ function scoreFreshness(text, theme, scene) {
   const clicheHits = countMatches(text, clichePhrases);
   const clicheAvoid = clicheHits === 0 ? 6 : clicheHits === 1 ? 3 : 0;
 
+  const unusualObjects = ["味噌汁", "膜", "ドアノブ", "改札", "通知", "座席", "窓ガラス", "手すり"];
+  const unusualHits = countMatches(text, unusualObjects);
   const concreteHits = countMatches(text, concreteWords);
-  const freshChoice = concreteHits >= 2 ? 6 : concreteHits === 1 ? 4 : 2;
+  const freshChoice = unusualHits >= 1 ? 7 : concreteHits >= 2 ? 5 : concreteHits === 1 ? 4 : 2;
 
-  const themeHits = countMatches(text, flattenRelatedWords(theme.relatedWords));
-  const sceneHits = countMatches(text, flattenRelatedWords(scene.relatedWords));
-  const naturalFit = (themeHits >= 1 && sceneHits >= 1) ? 7 : themeHits >= 1 ? 4 : 2;
+  const themeHits = countKeywordStems(text, flattenRelatedWords(theme.relatedWords));
+  const sceneHits = countKeywordStems(text, flattenRelatedWords(scene.relatedWords));
+  const naturalFit = (themeHits >= 1.5 && sceneHits >= 1.5) ? 7 :
+                     (themeHits >= 1 || sceneHits >= 1) ? 5 : 2;
 
   return { score: Math.min(clicheAvoid + freshChoice + naturalFit, 20) };
 }
@@ -4217,11 +4258,12 @@ function scoreResonance(text) {
   const explanationHits = countMatches(text, explanationWords);
   const notOverExplained = explanationHits === 0 ? 6 : explanationHits === 1 ? 4 : 1;
 
-  const lingeringImage = /(ようだ|みたいだ|感じだ|ような)$/.test(text) ? 8 :
-                         /(ようだ|みたいだ|感じだ|ような)/.test(text) ? 5 : 2;
+  const lingeringImage = /(ようだ|みたいだ|感じだ|ような|だった)$/.test(text) ? 8 :
+                         /(ようだ|みたいだ|感じだ|ような|だった)/.test(text) ? 6 : 3;
 
-  const sensoryHits = countMatches(text, sensoryWords);
-  const meaningExpansion = sensoryHits >= 2 ? 6 : sensoryHits === 1 ? 4 : 2;
+  const resonanceWords = ["残る", "広がる", "追いつく", "にじむ", "ひそかに", "あとから", "ふいに", "じわじわ"];
+  const meaningExpansion = countMatches(text, resonanceWords) >= 2 ? 6 :
+                           countMatches(text, resonanceWords) === 1 ? 4 : 2;
 
   return { score: Math.min(notOverExplained + lingeringImage + meaningExpansion, 20) };
 }
