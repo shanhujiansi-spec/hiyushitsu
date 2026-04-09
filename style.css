@@ -1,0 +1,10 @@
+:root{--bg:#f7f4ee;--card:#fffdf8;--text:#2f2f2f;--muted:#6a6a6a;--accent:#2f4f4f;--border:#ddd6c8}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.app-shell{max-width:920px;margin:0 auto;padding:24px 16px 48px}.app-header{margin-bottom:24px}.app-header h1{margin:0 0 8px;font-size:2rem}.subtitle{margin:0 0 16px;color:var(--muted)}
+.top-nav,.prompt-actions,.result-actions,.record-controls{display:flex;gap:8px;flex-wrap:wrap}.screen{display:none}.screen.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 10px rgba(0,0,0,.03)}
+textarea{width:100%;margin-top:8px;padding:12px;border-radius:10px;border:1px solid var(--border);background:#fff;font:inherit;resize:vertical}
+button{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:white;color:var(--text);cursor:pointer}button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+.total-score{font-size:1.45rem;font-weight:700}.char-count{color:var(--muted);font-size:.95rem}.record-item{border-top:1px solid var(--border);padding:14px 0}.record-item:first-child{border-top:none}.muted{color:var(--muted)}
+.feedback-block p,.hint-block p{margin:0 0 8px}details summary{cursor:pointer;margin-bottom:10px}
+@media (max-width:640px){.app-shell{padding:16px 12px 36px}.card{padding:16px}button{width:100%}}

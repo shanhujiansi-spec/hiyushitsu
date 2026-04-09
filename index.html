@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>比喩室</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>比喩室</h1>
+      <p class="subtitle">言葉の像を磨くための、小さな稽古場。</p>
+      <nav class="top-nav">
+        <button id="nav-write">書く</button>
+        <button id="nav-records">記録庫</button>
+      </nav>
+    </header>
+    <main>
+      <section id="screen-write" class="screen active">
+        <div class="card">
+          <h2>お題</h2>
+          <p><strong>テーマ：</strong><span id="theme-text"></span></p>
+          <p><strong>シーン：</strong><span id="scene-text"></span></p>
+          <div class="prompt-actions">
+            <button id="change-theme">テーマだけ変える</button>
+            <button id="change-scene">シーンだけ変える</button>
+            <button id="change-both">両方変える</button>
+          </div>
+        </div>
+        <div class="card">
+          <label for="answer-input">比喩を書く</label>
+          <textarea id="answer-input" rows="8" placeholder="ここに比喩を書いてください。"></textarea>
+          <p class="char-count">文字数：<span id="char-count">0</span></p>
+          <button id="evaluate-button" class="primary">採点する</button>
+        </div>
+      </section>
+      <section id="screen-result" class="screen">
+        <div class="card">
+          <h2>採点結果</h2>
+          <p><strong>テーマ：</strong><span id="result-theme"></span></p>
+          <p><strong>シーン：</strong><span id="result-scene"></span></p>
+          <p class="total-score">総合点：<span id="total-score"></span>点</p>
+          <div class="core-scores">
+            <h3>中核評価</h3>
+            <p>構造一致：<span id="core-structure"></span> / 20</p>
+            <p>具体性：<span id="core-concreteness"></span> / 20</p>
+          </div>
+          <div class="all-scores">
+            <h3>項目別</h3>
+            <p>明確さ：<span id="score-clarity"></span> / 20</p>
+            <p>構造一致：<span id="score-structure"></span> / 20</p>
+            <p>具体性：<span id="score-concreteness"></span> / 20</p>
+            <p>新鮮さ・必然性：<span id="score-freshness"></span> / 20</p>
+            <p>余韻：<span id="score-resonance"></span> / 20</p>
+          </div>
+          <div class="feedback-block">
+            <h3>講評</h3>
+            <p id="feedback-line-1"></p>
+            <p id="feedback-line-2"></p>
+            <p id="feedback-line-3"></p>
+          </div>
+          <div class="hint-block">
+            <h3>ヒント語</h3>
+            <p id="hint-words"></p>
+          </div>
+          <div class="result-actions">
+            <button id="save-button">保存する</button>
+            <button id="retry-button">もう一度書く</button>
+            <button id="new-prompt-button">新しいお題へ</button>
+          </div>
+        </div>
+      </section>
+      <section id="screen-records" class="screen">
+        <div class="card">
+          <h2>記録庫</h2>
+          <div class="record-controls">
+            <button id="sort-newest">新しい順</button>
+            <button id="sort-score">点数順</button>
+            <button id="filter-all">すべて</button>
+            <button id="filter-top50">トップ50</button>
+          </div>
+          <div id="records-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
